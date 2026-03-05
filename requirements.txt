@@ -13,3 +13,5 @@ openpyxl           # Read .xlsx Excel files (pandas uses this under the hood)
 
 # Utilities
 requests           # Make HTTP requests (for web research tools)
+beautifulsoup4     # HTML parsing — used in App 04 to extract clean text from web pages
+pypdf              # PDF text extraction — used in App 05 to read PDF files
