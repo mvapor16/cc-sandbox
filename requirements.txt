@@ -1,0 +1,14 @@
+# Core — needed from App 01 onward
+anthropic          # Official Anthropic Python SDK (talks to Claude)
+python-dotenv      # Loads your .env file so Python can read your API key
+
+# Web server — needed from App 10 onward
+flask              # Lightweight Python web framework
+flask-cors         # Allows browser to talk to your Flask server
+
+# Data — needed from App 08 onward
+pandas             # Read and manipulate spreadsheets and CSVs
+openpyxl           # Read .xlsx Excel files (pandas uses this under the hood)
+
+# Utilities
+requests           # Make HTTP requests (for web research tools)
