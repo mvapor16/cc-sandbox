@@ -34,10 +34,11 @@ Run it:
   cd cc-sandbox
   python 02-smart-summarizer/app.py
 
-Then paste any text when prompted and press Enter TWICE on a blank line when done.
+Then paste any text when prompted — analysis starts automatically when you stop pasting.
 ════════════════════════════════════════════════════════════════════════════════
 """
 
+import select
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -117,48 +118,51 @@ Rules you must follow:
 # ── Getting input from the user ────────────────────────────────────────────────
 #
 # This is the first app where we take real input from the person running it.
-# `input()` pauses the program and waits for the user to type or paste.
 #
-# For multi-line text (articles, reports), we read lines in a loop and stop
-# when we see a blank line. This is a common CLI pattern for "end of input."
+# The key insight for paste-friendly input: when you paste text in a terminal,
+# all lines arrive nearly simultaneously (within a few milliseconds). By
+# watching stdin with a short timeout, we can detect "no more input for 500 ms"
+# as the signal that the paste is complete — no special keypress required.
+#
+# HOW select.select() WORKS:
+#   select.select([sys.stdin], [], [], timeout) watches stdin and returns as
+#   soon as data is available OR the timeout (in seconds) expires. If the
+#   return value's first list is empty, the timeout fired with no new data.
+#   This is a standard Unix I/O multiplexing primitive.
+#
+# WHY 500 ms:
+#   Paste arrives in < 10 ms. Human typing takes > 1000 ms between lines.
+#   500 ms is comfortably in between: fast enough to feel instant, long
+#   enough never to cut off a paste mid-flight.
 #
 def get_text_from_user() -> str:
     """
     Collect multi-line text from the terminal.
 
-    Reads lines until the user presses Enter TWICE in a row (two
-    consecutive blank lines). A single blank line is treated as a
-    paragraph break and preserved in the text, so you can paste
-    multi-paragraph articles without accidentally cutting them off.
+    Reads stdin until input stops arriving for 500 ms — designed so you
+    can paste any text (including multi-paragraph articles with blank
+    lines) and analysis starts automatically with no extra keypresses.
 
-    Also handles Ctrl+D (EOF signal on Mac/Linux) for users who
-    prefer that flow.
-
-    Returns the full text as a single string, or exits cleanly if
-    the user submits nothing.
+    Also handles Ctrl+D (EOF) as an explicit end-of-input signal.
     """
-    print("\nPaste or type the text you want to analyse.")
-    print("Press Enter TWICE on a blank line when you're done.")
+    print("\nPaste your text — analysis starts automatically.")
     print("─" * 60)
 
     lines = []
-    consecutive_blanks = 0
     while True:
-        try:
-            line = input()
-            if line == "":
-                if not lines:
-                    continue              # Ignore leading blank lines
-                consecutive_blanks += 1
-                if consecutive_blanks >= 2:
-                    break                 # Two blank lines = done
-                lines.append(line)        # One blank line = paragraph break, keep it
-            else:
-                consecutive_blanks = 0
-                lines.append(line)
-        except EOFError:
-            # Ctrl+D — treat as end of input
+        # Wait for the next line. On the very first iteration use no timeout
+        # so the app doesn't exit immediately before anything is pasted.
+        # After that, a 500 ms silence means the paste is done.
+        timeout = 0.5 if lines else None
+        ready = select.select([sys.stdin], [], [], timeout)[0]
+
+        if not ready:
+            break               # 500 ms with no new input — paste is complete
+
+        line = sys.stdin.readline()
+        if line == "":          # Ctrl+D / EOF
             break
+        lines.append(line.rstrip("\n"))
 
     text = "\n".join(lines).strip()
 
