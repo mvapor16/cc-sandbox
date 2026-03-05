@@ -1,6 +1,7 @@
 # Core — needed from App 01 onward
 anthropic          # Official Anthropic Python SDK (talks to Claude)
 python-dotenv      # Loads your .env file so Python can read your API key
+pydantic           # Data validation — used from App 03 onward for structured JSON output
 
 # Web server — needed from App 10 onward
 flask              # Lightweight Python web framework
