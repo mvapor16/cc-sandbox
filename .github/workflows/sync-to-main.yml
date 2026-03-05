@@ -1,0 +1,71 @@
+# .github/workflows/sync-to-main.yml
+# ─────────────────────────────────────────────────────────────────────────────
+# AUTO-SYNC: claude/ branch → main
+#
+# What this does:
+#   Every time a push lands on any branch matching "claude/**", this workflow
+#   automatically merges it into main. No manual PR, no manual git pull.
+#
+# Why it exists:
+#   Claude Code (the AI) can only push to branches named "claude/*".
+#   This action bridges that constraint so the latest code lands on main
+#   immediately — and your Codespace stays up to date.
+#
+# How it works:
+#   1. GitHub detects a push to claude/**
+#   2. This workflow starts on a GitHub-hosted runner (a fresh Ubuntu VM)
+#   3. It checks out the repo with full history
+#   4. It merges the claude/ branch into main
+#   5. It pushes main — your repo is updated within ~30 seconds of a push
+#
+# Permissions:
+#   `contents: write` gives the built-in GITHUB_TOKEN permission to push
+#   to main. No personal access token needed.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: Sync claude branch to main
+
+on:
+  push:
+    branches:
+      - 'claude/**'   # Triggers on any branch starting with "claude/"
+
+jobs:
+  sync-to-main:
+    name: Merge into main
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write   # Needed to push to main
+
+    steps:
+      # ── Step 1: Checkout ────────────────────────────────────────────────────
+      # fetch-depth: 0 means "clone the full history, not just the latest commit"
+      # This is required for git merge to work correctly across branches.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── Step 2: Set git identity ─────────────────────────────────────────────
+      # Git requires a name and email to create commits. We use the standard
+      # identity for GitHub Actions bots so the merge commit is clearly
+      # attributed to automation (not a human).
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # ── Step 3: Merge and push ───────────────────────────────────────────────
+      # github.ref_name resolves to the branch that triggered this workflow,
+      # e.g. "claude/agentic-sandbox-apps-rkVnK".
+      #
+      # --no-edit suppresses the editor prompt for the merge commit message.
+      # --no-ff  creates an explicit merge commit even if fast-forward is
+      #          possible — keeps the history readable ("Merge claude/... into main")
+      - name: Merge claude branch into main
+        run: |
+          git checkout main
+          git merge origin/${{ github.ref_name }} --no-edit --no-ff
+          git push origin main

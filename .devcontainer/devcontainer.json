@@ -33,15 +33,25 @@
         "python.defaultInterpreterPath": "/usr/local/bin/python",
         "editor.formatOnSave": true,
         "editor.tabSize": 4,
-        "terminal.integrated.defaultProfile.linux": "bash"
+        "terminal.integrated.defaultProfile.linux": "bash",
+        // Auto-fetch checks GitHub for new commits every few minutes.
+        // You'll see a sync indicator in the VS Code status bar (bottom-left)
+        // showing how many commits you're behind — one click to pull.
+        "git.autofetch": true,
+        "git.autofetchPeriod": 30
       }
     }
   },
 
-  // ── Commands that run when the container starts ────────────────────────────
-  // pip install -r requirements.txt runs automatically so you never have to
-  // manually install dependencies in a Codespace.
+  // ── Commands that run on first container creation ─────────────────────────
+  // Installs all Python dependencies once when the Codespace is first built.
   "postCreateCommand": "pip install -r requirements.txt",
+
+  // ── Commands that run every time the container starts ─────────────────────
+  // Automatically pulls the latest main every time you open or resume the
+  // Codespace. Combined with the GitHub Action that merges claude/ → main,
+  // this means new apps appear in your Codespace without any manual git work.
+  "postStartCommand": "git checkout main && git pull origin main --quiet",
 
   // ── Port forwarding ────────────────────────────────────────────────────────
   // When Flask runs on port 5000, Codespaces automatically tunnels it to a
