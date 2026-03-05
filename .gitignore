@@ -1,0 +1,39 @@
+# ── Environment & Secrets ──────────────────────────────────────────────────────
+# NEVER commit your API keys. This file keeps them off GitHub.
+.env
+.env.*
+
+# ── Python ─────────────────────────────────────────────────────────────────────
+# Virtual environment — each developer creates their own locally
+venv/
+.venv/
+env/
+
+# Python bytecode — generated automatically, not needed in source control
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Distribution / build artifacts
+dist/
+build/
+*.egg-info/
+
+# ── Data & Databases ───────────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ── OS Files ───────────────────────────────────────────────────────────────────
+.DS_Store          # Mac finder metadata
+Thumbs.db          # Windows thumbnail cache
+
+# ── Editor Files ───────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Node (for future JS/frontend work) ────────────────────────────────────────
+node_modules/
