@@ -34,7 +34,7 @@ Run it:
   cd cc-sandbox
   python 02-smart-summarizer/app.py
 
-Then paste any text when prompted and press Enter on a blank line when done.
+Then paste any text when prompted and press Enter TWICE on a blank line when done.
 ════════════════════════════════════════════════════════════════════════════════
 """
 
@@ -126,7 +126,11 @@ def get_text_from_user() -> str:
     """
     Collect multi-line text from the terminal.
 
-    Reads lines until the user presses Enter on a blank line.
+    Reads lines until the user presses Enter TWICE in a row (two
+    consecutive blank lines). A single blank line is treated as a
+    paragraph break and preserved in the text, so you can paste
+    multi-paragraph articles without accidentally cutting them off.
+
     Also handles Ctrl+D (EOF signal on Mac/Linux) for users who
     prefer that flow.
 
@@ -134,17 +138,23 @@ def get_text_from_user() -> str:
     the user submits nothing.
     """
     print("\nPaste or type the text you want to analyse.")
-    print("Press Enter on a blank line when you're done.")
+    print("Press Enter TWICE on a blank line when you're done.")
     print("─" * 60)
 
     lines = []
+    consecutive_blanks = 0
     while True:
         try:
             line = input()
-            if line == "" and lines:
-                # Blank line after some content = done
-                break
-            elif line != "":
+            if line == "":
+                if not lines:
+                    continue              # Ignore leading blank lines
+                consecutive_blanks += 1
+                if consecutive_blanks >= 2:
+                    break                 # Two blank lines = done
+                lines.append(line)        # One blank line = paragraph break, keep it
+            else:
+                consecutive_blanks = 0
                 lines.append(line)
         except EOFError:
             # Ctrl+D — treat as end of input
