@@ -49,6 +49,38 @@ def get_user_input(prompt: str) -> str:
         sys.exit(0)
 
 
+def print_section(title: str, content: str, wrap_width: int = 68) -> None:
+    """
+    Print a named section of structured output with consistent formatting.
+
+    Used by App 02 and later apps that parse Claude's response into sections.
+    Handles bullet-point lines specially so they stay indented and readable.
+
+    Args:
+        title:      The section label (e.g. "Summary", "Key Points")
+        content:    The section text (may contain newlines and bullet points)
+        wrap_width: Max characters per line (default 68 — fits a 72-wide terminal)
+    """
+    print(f"\n  {title}")
+    print(f"  {'─' * len(title)}")
+
+    for line in content.split("\n"):
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith("- "):
+            # Bullet point: indent the first line, wrap continuation further in
+            wrapped = textwrap.fill(
+                line,
+                width=wrap_width,
+                initial_indent="    ",        # "  - " prefix
+                subsequent_indent="      "    # align wrapped text under the bullet
+            )
+        else:
+            wrapped = textwrap.fill(line, width=wrap_width, initial_indent="  ")
+        print(wrapped)
+
+
 def count_words(text: str) -> int:
     """Return the word count of a string."""
     return len(text.split())
