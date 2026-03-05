@@ -128,9 +128,9 @@ def process_meeting(notes: str) -> MeetingAnalysis:
         max_tokens=2048,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": f"Here are the meeting notes:\n\n{notes}"}],
-        response_format=MeetingAnalysis
+        output_format=MeetingAnalysis,
     )
-    return response.parsed
+    return response.parsed_output
 
 
 # ── Output formatting ──────────────────────────────────────────────────────────
