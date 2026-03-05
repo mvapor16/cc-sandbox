@@ -3,13 +3,26 @@ shared/claude_client.py
 ────────────────────────
 The single place in this entire repo where we configure the Anthropic client.
 
-Why centralise it here?
-  - Every app imports from here instead of re-creating the client
-  - If you ever change your key, model, or settings, you change it in one place
-  - It also catches common setup mistakes (missing .env, missing key) early
-    with a clear error message instead of a cryptic API error later
+WHY IT'S HERE:
+  Every app imports from here. If your key changes, you update .env.
+  If the base URL changes, you update .env. Nothing else needs to change.
 
-Usage in any app:
+MCKINSEY NOTE:
+  McKinsey routes Claude through their internal AI gateway (QuantumBlack).
+  This means two things are different from a standard Anthropic setup:
+
+    1. ANTHROPIC_BASE_URL — traffic goes to McKinsey's gateway URL, not
+       directly to api.anthropic.com. The gateway then forwards to Anthropic.
+
+    2. ANTHROPIC_API_KEY — instead of the usual sk-ant-... key, you use a
+       JWT token from McKinsey's auth system. This token EXPIRES (roughly
+       every 30 minutes) and must be refreshed from your McKinsey portal.
+
+HOW TO REFRESH YOUR TOKEN:
+  Go to your McKinsey AI gateway portal and copy the new ANTHROPIC_API_KEY
+  value into your .env file. No code changes needed.
+
+USAGE IN ANY APP:
     from shared.claude_client import client, MODEL
     response = client.messages.create(model=MODEL, ...)
 """
@@ -21,39 +34,43 @@ import anthropic
 from dotenv import load_dotenv
 
 # ── Load the .env file ────────────────────────────────────────────────────────
-#
-# dotenv looks for a file called .env and loads its contents as environment
-# variables. We tell it explicitly to look in the repo root (two levels up
-# from this file) so it works no matter which subfolder you run from.
-#
-repo_root = Path(__file__).parent.parent   # /cc-sandbox/
+# Looks for .env in the repo root, regardless of which subfolder you run from.
+repo_root = Path(__file__).parent.parent
 load_dotenv(repo_root / ".env")
 
-# ── Validate the key exists ───────────────────────────────────────────────────
-api_key = os.getenv("ANTHROPIC_API_KEY")
+# ── Read environment variables ────────────────────────────────────────────────
+api_key  = os.getenv("ANTHROPIC_API_KEY")
+base_url = os.getenv("ANTHROPIC_BASE_URL")   # Optional — only needed for gateways
 
+# ── Validate ──────────────────────────────────────────────────────────────────
 if not api_key:
     raise EnvironmentError(
         "\n\n"
         "  ANTHROPIC_API_KEY not found.\n\n"
         "  To fix this:\n"
         "    1. Create a file called .env in the root of the cc-sandbox folder\n"
-        "    2. Add this line to it:  ANTHROPIC_API_KEY=sk-ant-your-key-here\n"
-        "    3. Get your key from: https://console.anthropic.com\n"
+        "    2. Add this line:  ANTHROPIC_API_KEY=your-key-here\n"
+        "    3. McKinsey users: copy the token from your AI gateway portal\n"
+        "       and also set: ANTHROPIC_BASE_URL=https://anthropic.prod.ai-gateway...\n"
     )
 
-# ── The model we use across all apps ─────────────────────────────────────────
-#
-# claude-opus-4-6 is Anthropic's most capable model. We use it everywhere
-# so you see what's possible. In production you'd sometimes swap to a faster,
-# cheaper model for simple tasks — but for learning, always use the best.
-#
+# ── The model ─────────────────────────────────────────────────────────────────
+# claude-opus-4-6 is Anthropic's most capable model.
+# McKinsey's gateway supports all standard Anthropic model IDs.
 MODEL = "claude-opus-4-6"
 
+# ── Build client kwargs ───────────────────────────────────────────────────────
+#
+# We only pass base_url if it's set. This keeps the client compatible with
+# both direct Anthropic keys (no base_url) and gateway setups like McKinsey's.
+#
+client_kwargs = {"api_key": api_key}
+
+if base_url:
+    # The Anthropic SDK accepts a custom base_url so all requests go through
+    # the gateway instead of directly to api.anthropic.com.
+    # The SDK automatically appends /v1/messages etc. to this URL.
+    client_kwargs["base_url"] = base_url
+
 # ── Create the client ─────────────────────────────────────────────────────────
-#
-# anthropic.Anthropic() is the main entry point to the SDK.
-# By passing api_key explicitly we make it crystal clear where the key comes
-# from (your .env file), rather than relying on implicit environment lookup.
-#
-client = anthropic.Anthropic(api_key=api_key)
+client = anthropic.Anthropic(**client_kwargs)

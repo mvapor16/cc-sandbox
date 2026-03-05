@@ -1,0 +1,57 @@
+{
+  // ── What is this file? ─────────────────────────────────────────────────────
+  // This tells GitHub Codespaces (and VS Code Dev Containers) how to set up
+  // your development environment automatically. When you open this repo in
+  // a Codespace, GitHub reads this file and:
+  //   1. Spins up a Linux container in the cloud
+  //   2. Installs Python and all extensions
+  //   3. Installs your pip dependencies
+  //   4. Opens VS Code in the browser, ready to run code
+  //
+  // You get a full development environment without installing anything locally.
+  // ───────────────────────────────────────────────────────────────────────────
+
+  "name": "cc-sandbox — Agentic App Lab",
+
+  // Use Microsoft's official Python 3.11 dev container image.
+  // This gives us a clean Linux environment with Python pre-installed.
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+
+  // ── VS Code extensions installed automatically ─────────────────────────────
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",           // Python language support + IntelliSense
+        "ms-python.pylint",           // Code quality hints
+        "esbenp.prettier-vscode",     // Auto-format HTML/CSS/JS
+        "eamodio.gitlens",            // Git history and blame
+        "ms-toolsai.jupyter",         // Run Jupyter notebooks (later apps)
+        "formulahendry.auto-rename-tag", // HTML tag auto-rename (handy for frontend work)
+        "ritwickdey.LiveServer"       // Live preview for HTML files
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 4,
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+
+  // ── Commands that run when the container starts ────────────────────────────
+  // pip install -r requirements.txt runs automatically so you never have to
+  // manually install dependencies in a Codespace.
+  "postCreateCommand": "pip install -r requirements.txt",
+
+  // ── Port forwarding ────────────────────────────────────────────────────────
+  // When Flask runs on port 5000, Codespaces automatically tunnels it to a
+  // public URL so you can open it in your browser. This is how you'll preview
+  // web interfaces from App 10 onward.
+  "forwardPorts": [5000, 8000],
+  "portsAttributes": {
+    "5000": {
+      "label": "Flask App",
+      "onAutoForward": "openPreview"
+    }
+  }
+}

@@ -2,6 +2,8 @@
 # NEVER commit your API keys. This file keeps them off GitHub.
 .env
 .env.*
+# Allow the example template — it contains no real secrets
+!.env.example
 
 # ── Python ─────────────────────────────────────────────────────────────────────
 # Virtual environment — each developer creates their own locally
