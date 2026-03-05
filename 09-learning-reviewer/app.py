@@ -191,9 +191,9 @@ def review_content(content: str, rubric_name: str, criteria: list[str]) -> Revie
         messages=[
             {"role": "user", "content": f"Please review this content:\n\n{content}"}
         ],
-        response_format=ReviewResult,
+        output_format=ReviewResult,
     )
-    return response.parsed
+    return response.parsed_output
 
 
 # ── Output formatting ──────────────────────────────────────────────────────────
