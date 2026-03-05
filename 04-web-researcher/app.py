@@ -122,17 +122,17 @@ TOOLS = [
 ]
 
 
-SYSTEM_PROMPT = """You are a thorough research assistant with web access.
+SYSTEM_PROMPT = """You are a focused research assistant with web access.
 
 When asked a question:
-1. Search the web to find relevant sources
-2. Fetch and read the most relevant pages in full
+1. Search the web with 2-4 targeted queries to find the best sources
+2. Fetch and read the 2-3 most relevant pages in full
 3. Synthesize what you found into a clear, well-sourced answer
 4. Cite your sources with URLs at the end
 
-Be thorough — search multiple times with different queries if needed.
-Prefer specific, factual answers with concrete details over vague summaries.
-If initial search results are sparse, search again with refined keywords."""
+Be efficient: aim to have a complete answer within 6-8 tool calls total.
+Do not keep searching once you have enough information to write a good answer.
+Prefer specific, factual answers with concrete details over vague summaries."""
 
 
 # ── Tool implementations ───────────────────────────────────────────────────────
@@ -281,7 +281,7 @@ def research(question: str) -> str:
     """
     messages = [{"role": "user", "content": question}]
     iteration = 0
-    max_iterations = 10  # prevent runaway loops
+    max_iterations = 15  # prevent runaway loops
 
     print("\n  Researching", end="", flush=True)
 
